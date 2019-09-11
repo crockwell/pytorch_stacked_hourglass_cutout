@@ -1,6 +1,6 @@
 # Improving Stacked Hourglass Networks with Regularization
 
-Based on **Stacked Hourglass Networks for Human Pose Estimation.** [Alejandro Newell](http://www-personal.umich.edu/~alnewell/), Kaiyu Yang, and [Jia Deng](https://www.cs.princeton.edu/~jiadeng/). *European Conference on Computer Vision (ECCV)*, 2016. [Github](https://github.com/princeton-vl/pose-hg-train)
+Extension of **Stacked Hourglass Networks for Human Pose Estimation.** [Alejandro Newell](http://www-personal.umich.edu/~alnewell/), Kaiyu Yang, and [Jia Deng](https://www.cs.princeton.edu/~jiadeng/). *European Conference on Computer Vision (ECCV)*, 2016. [Github](https://github.com/princeton-vl/pose-hg-train)
 
 PyTorch code extended from [Github](https://github.com/princeton-vl/pytorch_stacked-hourglass). Implemented under advisors Alejandro Newell and Prof. Jia Deng.
 
