@@ -5,6 +5,7 @@ import os
 import numpy as np
 import h5py
 import copy
+import torchvision.transforms
 
 from utils.group import HeatmapParser
 import utils.img
@@ -12,7 +13,7 @@ import data.MPII.ref as ds
 
 parser = HeatmapParser()
 
-def post_process(det, mat_, trainval, c=None, s=None, resolution=None):
+def post_process(det, mat_, c=None, s=None, resolution=None):
     mat = np.linalg.pinv(np.array(mat_).tolist() + [[0,0,1]])[:2]
     res = det.shape[1:3]
     cropped_preds = parser.parse(np.float32([det]))[0]
@@ -22,9 +23,8 @@ def post_process(det, mat_, trainval, c=None, s=None, resolution=None):
         
     preds = np.copy(cropped_preds)
     ##for inverting predictions from input res on cropped to original image
-    if trainval != 'cropped':
-        for j in range(preds.shape[1]):
-            preds[0,j,:2] = utils.img.transform(preds[0,j,:2], c, s, resolution, invert=1)
+    for j in range(preds.shape[1]):
+        preds[0,j,:2] = utils.img.transform(preds[0,j,:2], c, s, resolution, invert=1)
     return preds
 
 def inference(img, func, config, c, s):
@@ -60,7 +60,7 @@ def inference(img, func, config, c, s):
 
     det = np.minimum(det, 1)
     
-    return post_process(det, mat_, 'valid', c, s, res)
+    return post_process(det, mat_, c, s, res)
 
 def mpii_eval(pred, gt, normalizing, num_train, bound=0.5):
     """
@@ -148,6 +148,11 @@ def get_img(config, num_eval=2958, num_train=300):
     output_res = config['train']['output_res']
     val_f = h5py.File(os.path.join(ds.annot_dir, 'valid.h5'), 'r')
     
+    test_transform = torchvision.transforms.Compose([
+                torchvision.transforms.ToTensor(),
+                torchvision.transforms.Normalize(config['train']['mean'], config['train']['stdev']),
+    ])
+    
     tr = tqdm.tqdm( range(0, num_train), total = num_train )
     ## training
     train_f = h5py.File(os.path.join(ds.annot_dir, 'train.h5') ,'r')
@@ -158,7 +163,8 @@ def get_img(config, num_eval=2958, num_train=300):
         orig_img = cv2.imread(path_t)[:,:,::-1]
         c = train_f['center'][i]
         s = train_f['scale'][i]
-        im = utils.img.crop(orig_img, c, s, (input_res, input_res))
+        im = utils.img.crop(orig_img, c, s, (input_res, input_res))/255
+        im=test_transform(im).numpy().transpose(1,2,0)*255
         
         ## kp
         kp = train_f['part'][i]
@@ -182,7 +188,8 @@ def get_img(config, num_eval=2958, num_train=300):
         orig_img = cv2.imread(path_t)[:,:,::-1]
         c = val_f['center'][i]
         s = val_f['scale'][i]
-        im = utils.img.crop(orig_img, c, s, (input_res, input_res))
+        im = utils.img.crop(orig_img, c, s, (input_res, input_res))/255
+        im=test_transform(im).numpy().transpose(1,2,0)*255
         
         ## kp
         kp = val_f['part'][i]

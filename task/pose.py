@@ -13,14 +13,14 @@ __config__ = {
     'data_provider': 'data.MPII.dp',
     'network': 'models.posenet.PoseNet',
     'inference': {
-        'nstack': 8,
+        'nstack': 2,
         'inp_dim': 256,
         'oup_dim': 16,
         'num_parts': 16,
         'increase': 0,
         'keys': ['imgs'],
         'num_eval': 2958, ## number of val examples used. entire set is 2958
-        'train_num_eval': 300, ## number of train examples tested at test time
+        'train_num_eval': 5, ## number of train examples tested at test time
     },
 
     'train': {
@@ -38,6 +38,11 @@ __config__ = {
         'decay_lr': 2e-4,
         'num_workers': 2,
         'use_data_loader': True,
+        'mean': [.3643, .3437, .3156],
+        'stdev': [.1510, .1469, .1472],
+        'cutout_size': 64,
+        'cutout_prob': 1,
+        'num_holes': 2,
     },
 }
 

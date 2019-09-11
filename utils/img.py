@@ -5,6 +5,37 @@ import scipy.misc
 # General image processing functions
 # =============================================================================
 
+def cutout(mask_size, p, num_holes, mask_color=(0, 0, 0)):
+    mask_size_half = mask_size // 2
+    offset = 1 if mask_size % 2 == 0 else 0
+
+    def _cutout(image):
+        image = np.asarray(image).copy()
+
+        if np.random.random() > p:
+            return image
+
+        h, w = image.shape[1:]
+
+        cxmin, cxmax = mask_size_half, w + offset - mask_size_half
+        cymin, cymax = mask_size_half, h + offset - mask_size_half
+        for i in range(num_holes):
+            cx = np.random.randint(cxmin, cxmax)
+            cy = np.random.randint(cymin, cymax)
+            xmin = cx - mask_size_half
+            ymin = cy - mask_size_half
+            xmax = xmin + mask_size
+            ymax = ymin + mask_size
+            xmin = max(0, xmin)
+            ymin = max(0, ymin)
+            xmax = min(w, xmax)
+            ymax = min(h, ymax)
+            mc = np.zeros((3,ymax-ymin,xmax-xmin))
+            image[:, ymin:ymax, xmin:xmax] = mc #3,256,256
+        return image
+
+    return _cutout
+
 def get_transform(center, scale, res, rot=0):
     # Generate transformation matrix
     h = 200 * scale

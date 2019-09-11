@@ -5,6 +5,8 @@ import torch
 import numpy as np
 import torch.utils.data
 import utils.img
+import torchvision.transforms
+from PIL import Image
 
 class GenerateHeatmap():
     def __init__(self, output_res, num_parts):
@@ -45,6 +47,11 @@ class Dataset(torch.utils.data.Dataset):
         self.generateHeatmap = GenerateHeatmap(self.output_res, config['inference']['num_parts'])
         self.ds = ds
         self.index = index
+        self.mean = config['train']['mean']
+        self.stdev = config['train']['stdev']
+        self.cutout_size = config['train']['cutout_size']
+        self.cutout_prob = config['train']['cutout_prob']
+        self.num_holes = config['train']['num_holes']
 
     def __len__(self):
         return len(self.index)
@@ -80,14 +87,30 @@ class Dataset(torch.utils.data.Dataset):
         aug_rot = (np.random.random() * 2 - 1) * 30.
         aug_scale = np.random.random() * (1.25 - 0.75) + 0.75
         scale *= aug_scale
+        # random vertical flipping
+        if np.random.random() < .05:
+            aug_rot += 180
             
         mat_mask = utils.img.get_transform(center, scale, (self.output_res, self.output_res), aug_rot)[:2]
 
         mat = utils.img.get_transform(center, scale, (self.input_res, self.input_res), aug_rot)[:2]
         inp = cv2.warpAffine(cropped, mat, (self.input_res, self.input_res)).astype(np.float32)/255
         keypoints[:,:,0:2] = utils.img.kpt_affine(keypoints[:,:,0:2], mat_mask)
+        
+        # normalize, perform cutout, color jitter
+        train_transform = torchvision.transforms.Compose([
+                torchvision.transforms.ToTensor(),
+                torchvision.transforms.Normalize(self.mean, self.stdev),
+                utils.img.cutout(self.cutout_size, self.cutout_prob, self.num_holes)
+            ])
+
+        train_transform2 = torchvision.transforms.Compose([
+            torchvision.transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4, hue=0.1)])
+        
+        inp = np.array(train_transform2(Image.fromarray(np.uint8(inp))))/255
+        inp = train_transform(inp).transpose(1,2,0)
+        
         if np.random.randint(2) == 0:
-            inp = self.preprocess(inp)
             inp = inp[:, ::-1]
             keypoints = keypoints[:, ds.flipped_parts['mpii']]
             keypoints[:, :, 0] = self.output_res - keypoints[:, :, 0]
@@ -106,28 +129,6 @@ class Dataset(torch.utils.data.Dataset):
         heatmaps = self.generateHeatmap(keypoints)
         
         return inp.astype(np.float32), heatmaps.astype(np.float32)
-
-    def preprocess(self, data):
-        # random hue and saturation
-        data = cv2.cvtColor(data, cv2.COLOR_RGB2HSV);
-        delta = (np.random.random() * 2 - 1) * 0.2
-        data[:, :, 0] = np.mod(data[:,:,0] + (delta * 360 + 360.), 360.)
-
-        delta_sature = np.random.random() + 0.5
-        data[:, :, 1] *= delta_sature
-        data[:,:, 1] = np.maximum( np.minimum(data[:,:,1], 1), 0 )
-        data = cv2.cvtColor(data, cv2.COLOR_HSV2RGB)
-
-        # adjust brightness
-        delta = (np.random.random() * 2 - 1) * 0.3
-        data += delta
-
-        # adjust contrast
-        mean = data.mean(axis=2, keepdims=True)
-        data = (data - mean) * (np.random.random() + 0.5) + mean
-        data = np.minimum(np.maximum(data, 0), 1)
-        return data
-
 
 def init(config):
     batchsize = config['train']['batchsize']
