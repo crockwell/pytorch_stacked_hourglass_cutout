@@ -1,9 +1,12 @@
-# Stacked Hourglass Networks in Pytorch
+# Improving Stacked Hourglass Networks with Regularization
 
-Based on **Stacked Hourglass Networks for Human Pose Estimation.** [Alejandro Newell](http://www-personal.umich.edu/~alnewell/), Kaiyu Yang, and [Jia Deng](https://www.cs.princeton.edu/~jiadeng/). *European Conference on Computer Vision (ECCV)*, 2016. [Github](https://github.com/princeton-vl/pose-hg-train)
+Extension of **Stacked Hourglass Networks for Human Pose Estimation.** [Alejandro Newell](http://www-personal.umich.edu/~alnewell/), Kaiyu Yang, and [Jia Deng](https://www.cs.princeton.edu/~jiadeng/). *European Conference on Computer Vision (ECCV)*, 2016. [Github](https://github.com/princeton-vl/pose-hg-train)
 
-PyTorch code also adopted from: **Associative Embedding: End-to-end Learning for Joint Detection and Grouping.**
-[Alejandro Newell](http://www-personal.umich.edu/~alnewell/), Zhiao Huang, and [Jia Deng](https://www.cs.princeton.edu/~jiadeng/). *Neural Information Processing Systems (NeurIPS)*, 2017. [Github](https://github.com/princeton-vl/pose-ae-train)
+PyTorch code extended from [Github](https://github.com/princeton-vl/pytorch_stacked-hourglass). Implemented under advisors Alejandro Newell and Prof. Jia Deng.
+
+## Overview
+
+Newell et al. originally reported 0.881 validation accuracy using 8HG model on MPII. [Here](https://github.com/princeton-vl/pytorch_stacked-hourglass) we get validation accuracy of 0.885 using a 2HG model and 0.901 using an 8HG model. In this implementation, validation accuracies of 0.887 and 0.906 are achieved by adding mean-normalization, cutout, and vertical flipping. Test number of 0.913 is also achieved, as opposed to authors' 0.909.
 
 ## Getting Started
 
@@ -12,9 +15,9 @@ This repository provides everything necessary to train and evaluate a single-per
 Requirements:
 
 - Python 3 (code has been tested on Python 3.6)
-- PyTorch (code tested with 0.4)
+- PyTorch (code tested with 0.4), torchvision (tested with version 0.2.1)
 - CUDA and cuDNN
-- Python packages (not exhaustive): opencv-python, tqdm, cffi, h5py
+- Python packages (not exhaustive): opencv-python, tqdm, cffi, h5py, scipy (tested with 1.1.0)
 
 Structure:
 - ```data/```: data loading and data augmentation code
@@ -47,9 +50,9 @@ The option "-m n" will automatically stop training after n total iterations (if 
 
 #### Pretrained Models
 
-An 8HG pretrained model is available [here](https://crockwell.github.io/models/hg_8/checkpoint.pth.tar). It should yield validation accuracy of 0.901.
+An 8HG pretrained model is available [here](http://www-personal.umich.edu/~cnris/regularization_2hg/checkpoint.pth.tar). It should yield validation accuracy of 0.906.
 
-A 2HG pretrained model is available [here](https://crockwell.github.io/models/hg_2/checkpoint.pth.tar). It should yield validation accuracy of 0.885.
+A 2HG pretrained model is available [here](http://www-personal.umich.edu/~cnris/regularization_8hg/checkpoint.pth.tar). It should yield validation accuracy of 0.887.
 
 Models should be formatted as exp/<exp_name>/checkpoint.pth.tar
 
