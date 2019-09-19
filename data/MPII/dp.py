@@ -94,7 +94,7 @@ class Dataset(torch.utils.data.Dataset):
         mat_mask = utils.img.get_transform(center, scale, (self.output_res, self.output_res), aug_rot)[:2]
 
         mat = utils.img.get_transform(center, scale, (self.input_res, self.input_res), aug_rot)[:2]
-        inp = cv2.warpAffine(cropped, mat, (self.input_res, self.input_res)).astype(np.float32)/255
+        inp = cv2.warpAffine(cropped, mat, (self.input_res, self.input_res)).astype(np.float32)
         keypoints[:,:,0:2] = utils.img.kpt_affine(keypoints[:,:,0:2], mat_mask)
         
         # normalize, perform cutout, color jitter
